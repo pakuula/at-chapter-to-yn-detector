@@ -1,0 +1,22 @@
+name: Zip extension and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # e.g., v1.0, v2.0, etc.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zip extension
+        run: zip -r at-chapter-to-yn-detector-extension.zip manifest.json popup.html popup.js
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: at-chapter-to-yn-detector-extension.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

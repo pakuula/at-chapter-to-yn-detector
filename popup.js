@@ -92,12 +92,12 @@ function showCopiedNotification() {
     function dismiss() {
       notify.remove();
       document.removeEventListener('click', dismiss);
-      document.removeEventListener('keydown', dismiss);
+      document.removeEventListener('keypress', dismiss);
     }
 
     setTimeout(dismiss, 3000);
     document.addEventListener('click', dismiss);
-    document.addEventListener('keydown', dismiss);
+    document.addEventListener('keypress', dismiss);
   });
 }
 
@@ -177,7 +177,7 @@ function showNeuroNotification(score, results) {
     function dismiss() {
       notify.remove();
       document.removeEventListener('click', onPageClick);
-      document.removeEventListener('keydown', dismiss);
+      document.removeEventListener('keypress', dismiss);
     }
 
     async function onPageClick(event) {
@@ -185,7 +185,7 @@ function showNeuroNotification(score, results) {
         try {
           await copyResults();
         } catch (e) {
-          console.error('[neurodetector] Не удалось скопировать results:', e);
+          consoleErrInTab('[neurodetector] Не удалось скопировать results:', e);
         }
         dismiss();
         showCopiedBanner();
@@ -195,7 +195,7 @@ function showNeuroNotification(score, results) {
     }
 
     document.addEventListener('click', onPageClick);
-    document.addEventListener('keydown', dismiss);
+    document.addEventListener('keypress', dismiss);
   }, [score, results]);
 }
 
@@ -230,11 +230,11 @@ function showNeuroErrorNotification() {
     function dismiss() {
       notify.remove();
       document.removeEventListener('click', dismiss);
-      document.removeEventListener('keydown', dismiss);
+      document.removeEventListener('keypress', dismiss);
     }
 
     document.addEventListener('click', dismiss);
-    document.addEventListener('keydown', dismiss);
+    document.addEventListener('keypress', dismiss);
   });
 }
 
@@ -256,7 +256,7 @@ async function analyzeWithYandex(text) {
     credentials: 'omit',
   });
   let result = await response.json();
-  consoleLogInTab('[neurodetector] Ответ (сырой):', result);
+  consoleLogInTab('[neurodetector] Ответ (сырой):', JSON.stringify(result));
   return result;
 }
 
@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.disabled = false;
         return;
       }
-      consoleLogInTab('[neurodetector] Ответ:', data);
+      consoleLogInTab('[neurodetector] Ответ:', JSON.stringify(data));
       if (data?.ok === true && typeof data?.results?.statistics?.score === 'number') {
         await showNeuroNotification(data.results.statistics.score, data.results);
         status.textContent = 'Готово.';

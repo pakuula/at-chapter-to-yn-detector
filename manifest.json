@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Author.Today – Проверить главу в нейродетекторе",
-  "version": "1.0",
+  "version": "1.0.2",
   "description": "Отправляет текст главы с сайта author.today в нейродетектор Яндекса и отображает результат в виде процента вероятности, что текст сгенерирован нейросетью.",
   "permissions": ["activeTab", "scripting"],
   "host_permissions": ["https://author.today/*", "https://yandex.ru/*"],

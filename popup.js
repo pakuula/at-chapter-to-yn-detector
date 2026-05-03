@@ -200,15 +200,16 @@ function showNeuroNotification(score, results) {
 }
 
 /** Показать уведомление об ошибке нейродетектора на странице. */
-function showNeuroErrorNotification() {
-  return runInTab(() => {
+function showNeuroErrorNotification(errorText) {
+  return runInTab((errorText) => {
     const ID = '__author_today_neuro_notify__';
     const existing = document.getElementById(ID);
     if (existing) existing.remove();
 
     const notify = document.createElement('div');
     notify.id = ID;
-    notify.innerHTML = 'Запрос не удался<br>Подробности в логе';
+    console.log('[neurodetector] Показываем уведомление об ошибке:', errorText);
+    notify.innerHTML = 'Запрос не удался<br>' + ( errorText ? '<em>' + errorText + '</em>' : 'Подробности в логе' );
     notify.style.cssText = [
       'position:fixed',
       'top:20px',
@@ -235,7 +236,7 @@ function showNeuroErrorNotification() {
 
     document.addEventListener('click', dismiss);
     document.addEventListener('keypress', dismiss);
-  });
+  }, [errorText]);
 }
 
 /**
@@ -323,19 +324,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         data = await analyzeWithYandex(text);
       } catch (e) {
         consoleErrInTab('[neurodetector] Ошибка запроса:', e);
-        await showNeuroErrorNotification();
+        await showNeuroErrorNotification(e.message);
         status.textContent = 'Не удалось выполнить запрос.';
         neuroBtn.disabled = false;
         btn.disabled = false;
         return;
       }
       consoleLogInTab('[neurodetector] Ответ:', JSON.stringify(data));
-      if (data?.ok === true && typeof data?.results?.statistics?.score === 'number') {
-        await showNeuroNotification(data.results.statistics.score, data.results);
-        status.textContent = 'Готово.';
+
+      if ("ok" in data) {
+        consoleLogInTab('[neurodetector] Результат анализа:', data.results);
+        if (data.ok === true && typeof data?.results?.statistics?.score === 'number') {
+          await showNeuroNotification(data.results.statistics.score, data.results);
+          status.textContent = 'Готово.';
+        } else {
+          consoleErrInTab('[neurodetector] Неожиданный формат данных.results:', data.results);
+          await showNeuroErrorNotification('Неожиданный формат данных<br>' + JSON.stringify(data.results));
+          status.textContent = 'Неожиданный формат ответа.';
+        }
+      } else if ("error" in data) {
+        consoleErrInTab('[neurodetector] Ошибка в ответе:', data.error);
+        await showNeuroErrorNotification(data.error);
+        status.textContent = 'Ошибка в ответе.';
       } else {
         consoleErrInTab('[neurodetector] Неожиданный формат ответа:', data);
-        await showNeuroErrorNotification();
+        await showNeuroErrorNotification('Неожиданный формат ответа');
         status.textContent = 'Неожиданный формат ответа.';
       }
       setTimeout(() => window.close(), 300);

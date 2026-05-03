@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*' # e.g., v1.0, v2.0, etc.
 
+permissions:
+  contents: write   # required to create GitHub Releases and upload assets
+
 jobs:
   build:
     runs-on: ubuntu-latest

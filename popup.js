@@ -101,19 +101,36 @@ function showCopiedNotification() {
   });
 }
 
-/** Показать уведомление с результатом нейродетектора на странице. */
-function showNeuroNotification(score, results) {
-  return runInTab((score, results) => {
+/** Показать уведомление с результатом нейродетектора на странице. 
+ * Ожидаемый формат results.stats:
+ * "stats": {
+            "segments_count": 16,
+            "AI_count": 0,
+            "LIKELY_AI_count": 0,
+            "LIKELY_HUMAN_count": 0,
+            "HUMAN_count": 16
+        },
+*/
+function showNeuroNotification(stats, results) {
+  return runInTab((stats, results) => {
     const ID = '__author_today_neuro_notify__';
     const existing = document.getElementById(ID);
     if (existing) existing.remove();
 
     const notify = document.createElement('div');
     notify.id = ID;
-    const percent = (score * 100).toFixed(2);
+    let percent = (x => (x*100).toFixed(1))
+    let human = stats.HUMAN_count / stats.segments_count;
+    let likely_human = stats.LIKELY_HUMAN_count / stats.segments_count;
+    let likely_ai = stats.LIKELY_AI_count / stats.segments_count;
+    let ai = stats.AI_count / stats.segments_count;
     notify.innerHTML =
-      'Этот текст сгенерирован нейросетью с вероятностью<br>' +
-      '<span style="font-size:150%">' + percent + '%</span>' +
+      'Доля сегментов:<ul>' +
+      '<li><span style="font-size:150%">AI: ' + percent(ai) + '%</span></li>' +
+      '<li><span style="font-size:150%">LIKELY AI: ' + percent(likely_ai) + '%</span></li>' +
+      '<li><span style="font-size:150%">LIKELY HUMAN: ' + percent(likely_human) + '%</span></li>' +
+      '<li><span style="font-size:150%">HUMAN: ' + percent(human) + '%</span></li>' +
+      '</ul>' +
       '<br><br><em>Кликни, чтобы скопировать полный результат анализа в формате JSON</em>'
       ;
     notify.style.cssText = [
@@ -196,7 +213,7 @@ function showNeuroNotification(score, results) {
 
     document.addEventListener('click', onPageClick);
     document.addEventListener('keypress', dismiss);
-  }, [score, results]);
+  }, [stats, results]);
 }
 
 /** Показать уведомление об ошибке нейродетектора на странице. */
@@ -334,8 +351,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if ("ok" in data) {
         consoleLogInTab('[neurodetector] Результат анализа:', data.results);
-        if (data.ok === true && typeof data?.results?.statistics?.score === 'number') {
-          await showNeuroNotification(data.results.statistics.score, data.results);
+        if (data.ok === true && typeof data?.results?.stats?.segments_count === 'number') {
+          await showNeuroNotification(data.results.stats, data.results);
           status.textContent = 'Готово.';
         } else {
           consoleErrInTab('[neurodetector] Неожиданный формат данных.results:', data.results);
